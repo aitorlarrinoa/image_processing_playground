@@ -3,6 +3,7 @@ We will learn how to use the OTSU method in order to find borders over a figure 
 """
 #### 1. Import necessary libraries ####
 import cv2 
+import cv2.cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -19,9 +20,9 @@ image = cv2.imread(INPUT_IMAGE_PATH)
 image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 image_gray_flatten = image_gray.flatten()
 
-plt.figure()
+""" plt.figure()
 plt.hist(image_gray_flatten, bins=100)
-plt.show()
+plt.show() """
 
 # Looking at the histogram, we can set a threshold of 251 in order to find the object, making use of a binary
 # image:
@@ -44,3 +45,14 @@ mask_otsu = np.uint8((image_gray<threshold_otsu)*255)
 cv2.imshow("mask_otsu", mask_otsu)
 cv2.waitKey(0)
 cv2.destroyAllWindows() 
+
+# As a bonus, if an image has more than one object and we want to label them and select the object of interest, we can do the 
+# following:
+output = cv2.connectedComponentsWithStats(mask_otsu, 4, cv2.CV_32S)
+# The number of objects will be in position 0, labels in position 1 and stats in position 2:
+num_objects = output[0]
+labels = output[1]
+stats = output[2]
+
+# This can be useful when we have just one objectand the Otsu method detects some noise and we want to delete it. In that case
+# we consider the object with highest area and the rest of the objects we set them to black.
