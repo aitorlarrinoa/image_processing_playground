@@ -44,7 +44,6 @@ mask_otsu = np.uint8((image_gray<threshold_otsu)*255)
 
 cv2.imshow("mask_otsu", mask_otsu)
 cv2.waitKey(0)
-cv2.destroyAllWindows() 
 
 # As a bonus, if an image has more than one object and we want to label them and select the object of interest, we can do the 
 # following:
@@ -56,3 +55,4 @@ stats = output[2]
 
 # This can be useful when we have just one objectand the Otsu method detects some noise and we want to delete it. In that case
 # we consider the object with highest area and the rest of the objects we set them to black.
+cv2.destroyAllWindows() 
