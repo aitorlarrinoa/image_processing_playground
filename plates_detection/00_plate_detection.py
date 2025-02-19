@@ -4,7 +4,7 @@ import numpy as np
 from scipy import ndimage
 
 # 2. Define global variables
-INPUT_IMAGE_PATH = "/Users/aitor/Desktop/Personal/repos/image_processing_playground/plates_detection/data/plate0.jpg"
+INPUT_IMAGE_PATH = "/Users/aitor/Desktop/Personal/repos/image_processing_playground/plates_detection/data/plate3.jpg"
 
 # 3. Code
 image = cv2.imread(INPUT_IMAGE_PATH)
@@ -13,13 +13,13 @@ image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 # Let's apply gaussian blur in order to get rid of noise in the image:
 image_gray = cv2.GaussianBlur(src=image_gray,ksize=(3,3),sigmaX=0)
 
-#thresh_otsu, _ = cv2.threshold(src=image_gray, thresh=0, maxval=255, type=cv2.THRESH_OTSU)
-#mask_otsu = np.uint8(255*(image_gray>thresh_otsu))
-image_gray = cv2.adaptiveThreshold(image_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                    cv2.THRESH_BINARY_INV, 11, 2)  # Adjust block size (11) and C (2)
+thresh_otsu, _ = cv2.threshold(src=image_gray, thresh=0, maxval=255, type=cv2.THRESH_OTSU)
+mask_otsu = np.uint8(255*(image_gray>thresh_otsu))
+# image_gray = cv2.adaptiveThreshold(image_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+#                                     cv2.THRESH_BINARY_INV, 11, 2)  # Adjust block size (11) and C (2)
 
 components = cv2.connectedComponentsWithStats(
-    image=image_gray,
+    image=mask_otsu,
     connectivity=4,
     ltype=cv2.CV_32S,
 )
@@ -46,31 +46,35 @@ for index in range(1, num_objects):
         image=mask, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE
     )
     cnt = contours[0]
-    x, y, w, h = cv2.boundingRect(cnt)
-    area_rect = h*w
-    #hull = cv2.convexHull(cnt)
-    #convex_points = hull[:, 0, :]
-    #m, n = mask.shape
+    # x, y, w, h = cv2.boundingRect(cnt)
+    # area_rect = h*w
+    hull = cv2.convexHull(cnt)
+    convex_points = hull[:, 0, :]
+    m, n = mask.shape
 
-    #area_comparison = np.zeros((m, n))
-    #convex_mask = np.uint8(255 * cv2.fillConvexPoly(area_comparison, convex_points, 1))
-    #convex_mask_list.append(convex_mask)
+    area_comparison = np.zeros((m, n))
+    convex_mask = np.uint8(255 * cv2.fillConvexPoly(area_comparison, convex_points, 1))
+    convex_mask_list.append(convex_mask)
 
-    if w/h > 1:
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2) 
-        thing_to_show = np.uint8(image_gray*mask)
-        cv2.imshow("", thing_to_show)
-        cv2.waitKey(0)
+    # if w/h > 1:
+    cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2) 
+    thing_to_show = np.uint8(image_gray*mask)
+    thing_to_show_convex = np.uint8(image_gray*convex_mask)
+    cv2.imshow("", thing_to_show)
+    cv2.waitKey(0)
 
-        area_obj = np.sum(mask)/255
-        #area_convex = np.sum(convex_mask)/255
+    cv2.imshow("", thing_to_show_convex)
+    cv2.waitKey(0)
 
-        diffs_area.append(abs(area_rect-area_obj))
+    area_obj = np.sum(mask)/255
+    area_convex = np.sum(convex_mask)/255
 
-cv2.imshow("", image)
-cv2.waitKey(0)
-plate_mask = mask_list[np.argmin(diffs_area)]
-print(plate_mask)
+    diffs_area.append(abs(area_convex-area_obj))
+
+# cv2.imshow("", image)
+# cv2.waitKey(0)
+# plate_mask = mask_list[np.argmin(diffs_area)]
+# print(plate_mask)
 
 #cv2.imshow("", plate_mask)
 #cv2.waitKey(0)
